@@ -4,186 +4,221 @@
 <meta charset="UTF-8">
 <title>Grocery Order</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body{margin:0;font-family:Arial;background:#f2f2f2}
+body{margin:0;font-family:Arial;background:#f3f3f3}
 header{background:#2e7d32;color:#fff;padding:10px;text-align:center}
-.container{display:flex;height:calc(100vh - 60px)}
+.lang-btn{background:#1565c0;color:#fff;border:none;padding:6px 10px;cursor:pointer}
+.container{display:flex;height:calc(100vh - 70px)}
 .left{width:60%;padding:15px;background:#fff;overflow:auto}
 .right{width:40%;padding:15px;background:#fafafa;border-left:2px solid #ccc}
-.tabs button{padding:8px;margin:3px;border:none;background:#ddd;cursor:pointer}
+.tabs button{padding:8px;margin:4px;border:none;background:#ddd;cursor:pointer}
 .tabs button.active{background:#2e7d32;color:#fff}
-input,textarea,button{width:100%;padding:7px;margin-top:6px}
+input,textarea,button{width:100%;padding:8px;margin-top:6px}
 .add{background:#2e7d32;color:#fff;border:none;cursor:pointer}
 .remove{background:red;color:#fff;border:none}
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px;text-align:center}
+h3{margin-top:20px}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>🛒 Grocery Order</h2>
+<h2 id="title">🛒 Grocery Order</h2>
+<button class="lang-btn" onclick="toggleLang()">English / മലയാളം</button>
 </header>
 
 <div class="container">
 
 <!-- LEFT -->
 <div class="left">
+
 <div class="tabs" id="tabs"></div>
 
-<label><b>Select or Type Item</b></label>
-<input list="items" id="itemInput" placeholder="Search or type item name">
-<datalist id="items"></datalist>
+<h3 id="sectionTitle">Add Vegetables</h3>
 
-<label><b>Quantity</b></label>
-<input id="qtyInput" placeholder="Example: 50g, 100g, 500g, 1kg, 2 pcs">
+<input list="itemList" id="itemInput" placeholder="Search or type item name">
+<datalist id="itemList"></datalist>
 
-<button class="add" onclick="addItem()">➕ Add to Cart</button>
+<input id="qtyInput" placeholder="Quantity (eg: 50g, 100g, 1kg)">
 
-<h3>➕ Other Item</h3>
+<button class="add" id="addBtn" onclick="addItem()">Add to Cart</button>
+
+<h3 id="otherTitle">➕ Other Item</h3>
 <input id="otherItem" placeholder="Item name">
 <input id="otherQty" placeholder="Quantity">
 <button class="add" onclick="addOther()">Add Other</button>
 
-<h3>👤 Customer (Optional)</h3>
-<input id="custName" placeholder="Name">
-<input id="custPhone" placeholder="Phone">
-<textarea id="custAddr" placeholder="Address"></textarea>
-<input id="shopName" placeholder="Shop name">
+<h3 id="custTitle">👤 Customer Details (Required)</h3>
+<input id="custName" placeholder="Customer Name *">
+<input id="custPhone" placeholder="Phone Number *">
+<textarea id="custAddr" placeholder="Address *"></textarea>
+
+<h4 id="shopTitle">🏪 Shop Name (Optional)</h4>
+<input id="shopName" placeholder="Shop name (optional)">
+
 </div>
 
 <!-- RIGHT -->
 <div class="right">
-<h3>🛒 Cart</h3>
+<h3 id="cartTitle">🛒 Cart</h3>
 <table>
 <thead>
-<tr><th>Item</th><th>Qty</th><th>Remove</th></tr>
+<tr>
+<th id="thItem">Item</th>
+<th id="thQty">Qty</th>
+<th id="thRemove">Remove</th>
+</tr>
 </thead>
-<tbody id="cart"></tbody>
+<tbody id="cartTable"></tbody>
 </table>
+
 <br>
-<button class="add" onclick="sendWA()">📲 Send to WhatsApp</button>
+<button class="add" id="waBtn" onclick="sendWhatsApp()">Place Order on WhatsApp</button>
 </div>
 
 </div>
 
 <script>
-const data={
-Vegetables:[
-"Tomato","Onion","Potato","Carrot","Cabbage","Cauliflower","Brinjal","Green Chilli",
-"Beetroot","Pumpkin","Bottle Gourd","Bitter Gourd","Drumstick","Cucumber","Radish",
-"Spinach","Coriander","Mint","Snake Gourd","Yam","Sweet Potato","Lady Finger",
-"Cluster Beans","French Beans","Green Peas","Garlic","Ginger","Turnip","Broccoli",
-"Spring Onion","Leek","Zucchini","Capsicum","Red Chilli","Green Pumpkin",
-"Ash Gourd","Ivy Gourd","Kovakka","Chow Chow","Mushroom","Corn","Celery",
-"Fenugreek","Mustard Leaves","Kale","Lettuce","Parsley","Dill","Basil"
-],
-Fruits:[
-"Apple","Banana","Orange","Mango","Papaya","Pineapple","Grapes","Watermelon",
-"Muskmelon","Pomegranate","Guava","Pear","Plum","Peach","Kiwi","Strawberry",
-"Blueberry","Raspberry","Blackberry","Custard Apple","Sapota","Jackfruit",
-"Dragon Fruit","Fig","Dates","Cherries","Apricot","Lychee","Longan",
-"Avocado","Coconut","Star Fruit","Passion Fruit","Tangerine","Mandarin",
-"Pomelo","Cranberry","Mulberry","Gooseberry","Amla","Lime","Lemon",
-"Sweet Lime","Jamun","Bael","Soursop","Breadfruit","Rambutan","Mangosteen"
-],
-Grocery:[
-"Rice","Wheat","Atta","Maida","Rava","Sugar","Jaggery","Salt","Cooking Oil",
-"Sunflower Oil","Coconut Oil","Ghee","Tea","Coffee","Milk Powder","Honey",
-"Turmeric","Chilli Powder","Coriander Powder","Pepper","Cumin","Mustard",
-"Cardamom","Clove","Cinnamon","Bay Leaf","Fennel","Fenugreek","Tamarind",
-"Vinegar","Soy Sauce","Chilli Sauce","Tomato Ketchup","Corn Flour","Baking Soda",
-"Baking Powder","Oats","Poha","Vermicelli","Pasta","Noodles","Lentils",
-"Green Gram","Black Gram","Chickpeas","Kidney Beans","Rajma","Toor Dal"
-],
-Bakery:[
-"Bread","Brown Bread","Bun","Burger Bun","Pav","Cake","Plum Cake","Chocolate Cake",
-"Vanilla Cake","Cup Cake","Cookies","Biscuits","Rusk","Toast","Croissant",
-"Doughnut","Puff","Veg Puff","Egg Puff","Samosa","Roll","Cream Bun","Jam Roll",
-"Fruit Cake","Cheese Cake","Swiss Roll","Pastry","Brownie","Muffin","Garlic Bread",
-"Pizza Base","Bread Crumbs","Hot Dog Bun","Sub Bun","Sponge Cake","Dry Cake",
-"Butter Cookies","Milk Biscuit","Marie","Good Day","Little Hearts","Nice Time",
-"Milk Rusk","Chocolate Bun","Fruit Bun","Honey Cake","Carrot Cake","Banana Cake"
-],
-Meat:[
-"Chicken","Chicken Breast","Chicken Leg","Chicken Wings","Chicken Liver",
-"Mutton","Mutton Curry Cut","Mutton Boneless","Beef","Beef Curry Cut",
-"Beef Boneless","Pork","Pork Belly","Pork Ribs","Duck","Duck Meat",
-"Turkey","Turkey Breast","Rabbit","Quail","Lamb","Lamb Chops",
-"Minced Meat","Sausage","Salami","Ham","Bacon","Meat Balls","Chicken Mince",
-"Mutton Mince","Beef Mince","Chicken Sausage","Frankfurter","Hot Dog",
-"Smoked Chicken","Smoked Beef","Frozen Chicken","Frozen Meat","Meat Pickle",
-"Dry Meat","Pepper Chicken","Masala Meat","Roasted Meat","Tandoori Chicken"
-],
-Fish:[
-"Sardine","Mackerel","Tuna","Seer Fish","Anchovy","Pomfret","Shark",
-"King Fish","Red Snapper","Tilapia","Catfish","Rohu","Katla","Hilsa",
-"Prawns","Shrimp","Crab","Lobster","Squid","Octopus","Clams","Mussels",
-"Pearl Spot","Barracuda","Sword Fish","Salmon","Cod","Haddock","Halibut",
-"Trout","Sole Fish","Eel","Butter Fish","Silver Fish","Needle Fish",
-"Threadfin","Grouper","Snapper","Milk Fish","Flying Fish","Ribbon Fish",
-"Yellow Fin Tuna","Skipjack","Baby Shark","Dry Fish","Salted Fish","Fish Pickle"
-]
+/* ---------- DATA ---------- */
+const data = {
+Vegetables:["Tomato","Onion","Potato","Carrot","Cabbage","Cauliflower","Brinjal","Pumpkin","Cucumber"],
+Fruits:["Apple","Banana","Orange","Mango","Grapes","Watermelon","Papaya"],
+Grocery:["Rice","Wheat","Sugar","Salt","Oil","Tea","Coffee"],
+Bakery:["Bread","Bun","Cake","Cookies","Rusk"],
+Meat:["Chicken","Mutton","Beef","Pork"],
+Fish:["Sardine","Mackerel","Tuna","Pomfret","Prawns"]
 };
 
+let currentCategory="Vegetables";
 let cart=[];
-let current="Vegetables";
+let lang="en";
 
+/* ---------- LANGUAGE TEXT ---------- */
+const text = {
+en:{
+ title:"🛒 Grocery Order",
+ addSection:"Add ",
+ itemPH:"Search or type item name",
+ qtyPH:"Quantity (eg: 50g, 100g, 1kg)",
+ addBtn:"Add to Cart",
+ other:"➕ Other Item",
+ cust:"👤 Customer Details (Required)",
+ shop:"🏪 Shop Name (Optional)",
+ cart:"🛒 Cart",
+ item:"Item", qty:"Qty", remove:"Remove",
+ wa:"Place Order on WhatsApp"
+},
+ml:{
+ title:"🛒 സാധനങ്ങൾ ഓർഡർ ചെയ്യുക",
+ addSection:"ചേർക്കുക ",
+ itemPH:"സാധനം തിരയുക അല്ലെങ്കിൽ ടൈപ്പ് ചെയ്യുക",
+ qtyPH:"അളവ് (ഉദാ: 50g, 100g, 1kg)",
+ addBtn:"കാർട്ടിലേക്കു ചേർക്കുക",
+ other:"➕ മറ്റ് സാധനങ്ങൾ",
+ cust:"👤 ഉപഭോക്തൃ വിവരങ്ങൾ (അവശ്യമാണ്)",
+ shop:"🏪 കടയുടെ പേര് (ഐച്ഛികം)",
+ cart:"🛒 കാർട്ട്",
+ item:"സാധനം", qty:"അളവ്", remove:"നീക്കം",
+ wa:"WhatsApp വഴി ഓർഡർ നൽകുക"
+}
+};
+
+/* ---------- LANGUAGE SWITCH ---------- */
+function toggleLang(){
+ lang = (lang==="en")?"ml":"en";
+ applyLang();
+}
+function applyLang(){
+ document.getElementById("title").innerText=text[lang].title;
+ document.getElementById("sectionTitle").innerText=text[lang].addSection+currentCategory;
+ itemInput.placeholder=text[lang].itemPH;
+ qtyInput.placeholder=text[lang].qtyPH;
+ addBtn.innerText=text[lang].addBtn;
+ otherTitle.innerText=text[lang].other;
+ custTitle.innerText=text[lang].cust;
+ shopTitle.innerText=text[lang].shop;
+ cartTitle.innerText=text[lang].cart;
+ thItem.innerText=text[lang].item;
+ thQty.innerText=text[lang].qty;
+ thRemove.innerText=text[lang].remove;
+ waBtn.innerText=text[lang].wa;
+}
+
+/* ---------- TABS ---------- */
 const tabs=document.getElementById("tabs");
-const list=document.getElementById("items");
+const list=document.getElementById("itemList");
 
-Object.keys(data).forEach(cat=>{
+Object.keys(data).forEach((cat,i)=>{
  let b=document.createElement("button");
  b.innerText=cat;
- b.onclick=()=>load(cat,b);
+ if(i===0) b.classList.add("active");
+ b.onclick=()=>loadCategory(cat,b);
  tabs.appendChild(b);
 });
 
-function load(cat,btn){
- current=cat;
+function loadCategory(cat,btn){
+ currentCategory=cat;
+ sectionTitle.innerText=text[lang].addSection+cat;
  document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
  btn.classList.add("active");
  list.innerHTML="";
- data[cat].forEach(i=>{
-   let o=document.createElement("option");
-   o.value=i;
-   list.appendChild(o);
+ data[cat].forEach(item=>{
+  let o=document.createElement("option");
+  o.value=item;
+  list.appendChild(o);
  });
+ itemInput.value=""; qtyInput.value="";
 }
-load("Vegetables",tabs.children[0]);
 
+/* ---------- CART ---------- */
 function addItem(){
- let i=itemInput.value,q=qtyInput.value;
- if(!i||!q) return alert("Enter item & quantity");
+ let i=itemInput.value.trim(), q=qtyInput.value.trim();
+ if(!i||!q) return alert("Item & quantity required");
  cart.push({i,q});
- draw();
+ renderCart();
 }
 function addOther(){
- let i=otherItem.value,q=otherQty.value;
- if(!i||!q) return;
+ let i=otherItem.value.trim(), q=otherQty.value.trim();
+ if(!i||!q) return alert("Item & quantity required");
  cart.push({i,q});
- draw();
+ renderCart();
 }
-function draw(){
- cartEl.innerHTML="";
+function renderCart(){
+ cartTable.innerHTML="";
  cart.forEach((c,idx)=>{
-  let r=cartEl.insertRow();
+  let r=cartTable.insertRow();
   r.insertCell(0).innerText=c.i;
   r.insertCell(1).innerText=c.q;
   let b=document.createElement("button");
   b.innerText="X"; b.className="remove";
-  b.onclick=()=>{cart.splice(idx,1);draw();}
+  b.onclick=()=>{cart.splice(idx,1);renderCart();}
   r.insertCell(2).appendChild(b);
  });
 }
-function sendWA(){
+
+/* ---------- WHATSAPP ---------- */
+function sendWhatsApp(){
  if(!cart.length) return alert("Cart empty");
+ if(!custName.value||!custPhone.value||!custAddr.value)
+  return alert("Customer details required");
+
  let m="*Grocery Order*\n\n";
+ m+=`Name: ${custName.value}\nPhone: ${custPhone.value}\nAddress: ${custAddr.value}\n`;
+ if(shopName.value) m+=`Shop: ${shopName.value}\n`;
+ m+="\nItems:\n";
  cart.forEach(c=>m+=`${c.i} - ${c.q}\n`);
- window.open(`https://wa.me/919656406093?text=${encodeURIComponent(m)}`,"_blank");
+
+ window.open("https://wa.me/919895403106?text="+encodeURIComponent(m),"_blank");
 }
+
+/* INIT */
+loadCategory("Vegetables",tabs.children[0]);
+applyLang();
 </script>
 
 </body>
 </html>
+
