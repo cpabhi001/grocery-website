@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project 1 – Grocery Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: Arial, sans-serif; padding: 15px; background:#f9f9f9; }
+h1,h2 { background:#2e7d32; color:white; padding:8px; border-radius:5px; }
+.item { background:white; padding:8px; margin:5px 0; border-radius:5px; }
+button { padding:6px 10px; margin-top:5px; cursor:pointer; }
+select,input,textarea { width:100%; padding:6px; margin-top:4px; }
+table { width:100%; border-collapse:collapse; margin-top:10px; background:white; }
+th,td { border:1px solid #ccc; padding:6px; text-align:center; }
+.lang-btn { background:#1565c0; color:white; border:none; margin-bottom:10px; cursor:pointer; }
+.remove { background:red; color:white; border:none; padding:4px 8px; }
+</style>
+</head>
+<body>
+
+<button class="lang-btn" onclick="toggleLang()">🌐 മലയാളം / English</button>
+<h1 id="title">🛒 Grocery Order</h1>
+
+<div id="categories"></div>
+
+<h2 id="otherTitle">➕ Other Items / മറ്റ് സാധനങ്ങൾ</h2>
+<input id="otherName" placeholder="Item Name / സാധനം">
+<input id="otherUnit" placeholder="Unit (kg / pcs)">
+<input id="otherQty" type="number" placeholder="Quantity">
+<button onclick="addOther()">Add Other Item</button>
+
+<h2 id="cartTitle">🛒 Cart</h2>
+<table id="cartTable">
+<tr>
+<th>Item</th><th>Unit</th><th>Qty</th><th>Remove</th>
+</tr>
+</table>
+
+<h2 id="custTitle">👤 Customer Details</h2>
+<input id="cname" placeholder="Name / പേര്">
+<input id="cphone" placeholder="Phone / ഫോൺ">
+<textarea id="caddress" placeholder="Address / വിലാസം"></textarea>
+
+<h2 id="shopTitle">🏪 Shop Name</h2>
+<input id="shopname" placeholder="Shop name to purchase">
+
+<br>
+<button onclick="placeOrder()">📲 Place Order on WhatsApp</button>
+
+<script>
+// Language toggle
+let lang="en";
+function toggleLang(){
+ lang = (lang==="en")?"ml":"en";
+ document.querySelectorAll(".ml").forEach(e=>e.style.display=(lang==="ml")?"inline":"none");
+ document.querySelectorAll(".en").forEach(e=>e.style.display=(lang==="en")?"inline":"none");
+}
+toggleLang();
+
+// Cart
+let cart=[];
+
+// Categories and items (50 items each)
+const categories = [
+  {name:"Vegetables / പച്ചക്കറികൾ", unit:"kg", items:[
+    "Potato / ആലൂ", "Onion / ഉള്ളി", "Tomato / തക്കാളി", "Carrot / കാരറ്റ്", "Beetroot / ബീറ്റ്‌റൂട്ട്",
+    "Cabbage / മുട്ട", "Cauliflower / മുട്ടകാപ്പി", "Beans / ബീൻസ്", "Capsicum / ക്യാപ്സിക്കം", "Pumpkin / മത്തങ്ങ",
+    "Snake Gourd / പടവള്ളി", "Bottle Gourd / സുരക്ക", "Ladyfinger / വെണ്ടയ്ക്ക", "Spinach / സപിനാച്ച്", "Coriander / ধന", 
+    "Mint / പുത്തിന", "Fenugreek / ഉലുവ", "Chili / മുളക്", "Ginger / ഇഞ്ചി", "Garlic / വെളുത്തുള്ളി",
+    "Brinjal / വാഴപ്പ", "Radish / മൂളി", "Cucumber / വാഴക്ക", "Sweet Potato / ഇഞ്ചിപ്പിഴ", "Drumstick / മുലങ്ങ",
+    "Tapioca / കച്ചക്ക", "Raw Banana / പച്ചവഴ", "Green Peas / പയർ", "Methi Leaves / ഉലുവ ഇല", "Carrot Leaves / കാരറ്റ് ഇല",
+    "Turnip / ശാള", "Bitter Gourd / പാവയ്ക്ക", "Yam / ചെറുവാഴ", "Ridge Gourd / ചുരയ്ക്ക", "Colocasia / ചെറു മുള്ളങ്ങ",
+    "Snake Beans / പടവള്ളി പയർ", "Ash Gourd / കുമ്പളങ്ങ", "Amaranth Leaves / ചോമ്പ് ഇല", "Drumstick Leaves / മുലങ്ങ ഇല",
+    "Kohlrabi / കോൽറാബി", "Radish Leaves / മൂളി ഇല", "Tender Coconut / കൊക്ക", "Sweet Corn / മഞ്ഞൾ പയർ",
+    "Green Chili / പച്ചമുളക്", "Curry Leaves / കരിവേപ്പില", "Shallots / ചെറു ഉള്ളി", "Bottle Gourd Leaves / സുറക്ക ഇല",
+    "Celery / സെലറി", "Coriander Root / ധന മൂലം", "Garlic Chives / വെളുത്തുള്ളി ഇല"
+  ]},
+  {name:"Fruits / പഴങ്ങൾ", unit:"kg", items:[
+    "Banana / പഴം", "Mango / മാവ്", "Papaya / പപ്പായ", "Pineapple / അനാനാസ്", "Apple / ആപ്പിൾ",
+    "Orange / ഓറഞ്ച്", "Guava / പേര", "Grapes / മുന്തിരി", "Pomegranate / മുന്തിരി കപ്പ്", "Watermelon / തണ്ണിമത്തങ്ങ",
+    "Muskmelon / ചക്ക", "Strawberry / സ്ട്രോബറി", "Cherry / ചെറി", "Kiwi / കിവി", "Lemon / നാരങ്ങ",
+    "Jackfruit / ചക്ക", "Sapota / ചിക്കൂ", "Custard Apple / സീതഫലം", "Fig / അത്തിപ്പഴം", "Plum / പ്ലം",
+    "Pear / പിയർ", "Apricot / അപ്രിക്കോട്ട്", "Blueberry / ബ്ലുബെറി", "Raspberry / റാസ്ബെറി", "Blackberry / ബ്ലാക്ക്ബെറി",
+    "Avocado / അവൊക്കാഡോ", "Lychee / ലിച്ചി", "Mulberry / മുള്ബെറി", "Dates / ചൂര", "Cantaloupe / കാന്തലോപ്",
+    "Passion Fruit / പാഷൻ ഫ്രൂട്ട്", "Grapefruit / ഗ്രേപ് ഫ്രൂട്ട്", "Tamarind / പുളി", "Coconut / തേങ്ങ", "Persimmon / കാലം",
+    "Fig Leaf / അത്തിപ്പലം ഇല", "Carambola / സ്റ്റാർ ഫ്രൂട്ട്", "Dragon Fruit / ഡ്രാഗൺ ഫ്രൂട്ട്", "Longan / ലോങ്ഗാൻ", "Pomelo / പോമേലോ",
+    "Soursop / സോഴ്‌സോപ്പ്", "Mulberry Leaves / മുള്ബെറി ഇല", "Banana Flower / വാഴപ്പൂവ്", "Guava Leaves / പേര ഇല", "Pineapple Leaf / അനാനാസ് ഇല",
+    "Jackfruit Seeds / ചക്ക ബീൻസ്", "Papaya Leaves / പപ്പായ ഇല", "Mango Leaves / മാവ് ഇല", "Lime / ചെറുനാരങ്ങ", "Mandarin / മാണ്ഡറിൻ"
+  ]},
+  {name:"Grocery / കിച്ചൺ സാധനങ്ങൾ", unit:"pcs", items:[
+    "Rice / അരി", "Wheat Flour / ഗോതമ്പ് മാവ്", "Sugar / പഞ്ചസാര", "Salt / ഉപ്പ്", "Tea / ചായ",
+    "Coffee / കാപ്പി", "Cooking Oil / എണ്ണ", "Coconut Oil / തേങ്ങേണ്ണ", "Spices / മസാല", "Chili Powder / മുളകുപൊടി",
+    "Turmeric / മഞ്ഞൾ", "Coriander Powder / ധന്യപൊടി", "Mustard Seeds / കടുക്", "Cumin / ജീരകം", "Fenugreek / ഉലുവ",
+    "Tamarind Paste / പുളിപൊടി", "Vinegar / വെനിഗർ", "Soaps / സോപ്പ്", "Detergent / ഡിറ്റർജന്റ്", "Salted Snacks / സ്നാക്ക്സ്",
+    "Biscuits / ബിസ്ക്കറ്റ്", "Honey / തേൻ", "Jam / ജാം", "Pickle / അച്ചാർ", "Noodles / നൂഡിൽസ്",
+    "Pasta / പാസ്ത", "Soya Sauce / സോയ സോസ്", "Tomato Sauce / തക്കാളി സോസ്", "Ketchup / കെചപ്", "Mustard Sauce / കടുക് സോസ്",
+    "Vermicelli / വേർമിസിലി", "Cornflakes / കോൺഫ്ലേക്‌സ്", "Powder Milk / പാലുപൊടി", "Salted Peanuts / കജ്ജ", "Almonds / ബദാം",
+    "Cashews / കശ്യു", "Raisins / ഉണക്ക മുന്തിരി", "Dates / ചൂര", "Oats / ഓട്ട്‌സ്", "Sugar Candy / പഞ്ചസാര കാൻഡി",
+    "Chocolates / ചോക്ലേറ്റ്", "Biscuits Cream / ബിസ്ക്കറ്റ് ക്രീം", "Bread / ബ്രെഡ്", "Butter / വെണ്ണ", "Cheese / ചീസ്",
+    "Yogurt / ദഹി", "Milk / പാലു", "Curd / തൈര്", "Eggs / മുട്ട", "Instant Mix / ഇൻസ്റ്റന്റ് മിക്‌സ്"
+  ]},
+  {name:"Bakery / ബേക്കറി", unit:"pcs", items:[
+    "Bread / ബ്രെഡ്", "Bun / ബൺ", "Cake / കേക്ക്", "Croissant / ക്രോസന്റ്", "Donut / ഡോണട്ട്",
+    "Cookies / കുക്കീസ്", "Muffin / മഫിൻ", "Pie / പൈ", "Brownie / ബ്രൗണി", "Bagel / ബാഗൽ",
+    "Pastry / പാസ്റ്റ്രി", "Roll / റോൾ", "Sandwich / സാൻഡ്വിച്ച്", "Pizza Slice / പിസ്സാ", "Pudding / പുഡ്ഡിങ്",
+    "Danish / ഡാനിഷ്", "Focaccia / ഫോക്കാച്ച", "Tart / ടാർട്ട്", "Scone / സ്‌കോൺ", "Pita / പിറ്റ",
+    "Panini / പാനിനി", "Ciabatta / ചിയാബറ്റ", "Brioche / ബ്രിയോഷ്", "Bagette / ബാഗറ്റ്", "Eclair / എക്ലെയർ",
+    "Churros / ചുറോസ്സ്", "Pretzel / പ്രെട്ട്സൽ", "Kaiser Roll / കൈസർ റോൾ", "Babka / ബാബ്‌ക", "Cinnamon Roll / സിനമൺ റോള",
+    "Cupcake / കപ്പ്കേക്ക്", "Shortcake / ഷോർട്ട്കേക്ക്", "Gingerbread / ജിൻജർബ്രെഡ്", "Panettone / പാനെറ്റോൺ", "Madeleine / മാഡലെയ്ൻ",
+    "Macaron / മകാരോൺ", "Tiramisu / ടിറാമിസു", "Cheesecake / ചീസ് കേക്ക്", "Baklava / ബക്ലാവ", "Strudel / സ്റ്റ്രൂഡൽ",
+    "Dough / മാവ്", "Flatbread / ഫ്ലാറ്റ്‌ബ്രെഡ്", "Roti / റോട്ടി", "Paratha / പരാട്ട", "Naan / നാൻ",
+    "Puff / പഫ്", "Bun Cake / ബൺ കേക്ക്", "Bread Roll / ബ്രെഡ് റോൾ", "Cookies Choco / ചോക്ലേറ്റ് കുക്കീസ്", "Pie Slice / പൈ സ്ലൈസ്"
+  ]},
+  {name:"Meat / മാംസം", unit:"kg", items:[
+    "Chicken / ചിക്കൻ", "Mutton / മട്ടൺ", "Beef / ബീഫ്", "Pork / പോർക്ക", "Turkey / ടർക്കി",
+    "Duck / പട്ട", "Lamb / ലാംബ്", "Goat / ആട്", "Fish Meat / മീൻ മാംസം", "Bacon / ബേക്കൺ",
+    "Sausage / സോസേജ്", "Ham / ഹാം", "Chicken Liver / ചിക്കൻ ലിവർ", "Chicken Breast / ചിക്കൻ ബ്രസ്റ്റ്", "Chicken Thigh / ചിക്കൻ തൈ",
+    "Chicken Wings / ചിക്കൻ വിംഗ്സ്", "Mutton Liver / മട്ടൺ ലിവർ", "Mutton Leg / മട്ടൺ കാൽ", "Pork Belly / പോർക്ക ബെല്ലി", "Pork Chop / പോർക്ക ചോപ്പ്",
+    "Turkey Breast / ടർക്കി ബ്രസ്റ്റ്", "Turkey Leg / ടർക്കി കാൽ", "Duck Breast / പട്ട ബ്രസ്റ്റ്", "Duck Leg / പട്ട കാൽ", "Lamb Leg / ലാംബ് കാൽ",
+    "Goat Leg / ആട് കാൽ", "Beef Steak / ബീഫ് സ്റ്റേക്ക്", "Beef Mince / ബീഫ് മൈൻസ്", "Chicken Drumstick / ചിക്കൻ ഡ്രംസ്റ്റിക്", "Chicken Gizzard / ചിക്കൻ ഗിസാർഡ്",
+    "Mutton Mince / മട്ടൺ മൈൻസ്", "Pork Mince / പോർക്ക മൈൻസ്", "Bacon Strips / ബേക്കൺ സ്ട്രിപ്പ്", "Sausage Links / സോസേജ് ലിങ്ക്സ്", "Ham Slices / ഹാം സ്ലൈസ്",
+    "Chicken Nuggets / ചിക്കൻ നഗ്‌റ്റ്സ്", "Meatballs / മീറ്റ് ബോൾസ്", "Kebab / കബാബ്", "Chicken Curry Cut / ചിക്കൻ കറി കട്ട്", "Mutton Curry Cut / മട്ടൺ കറി കട്ട്",
+    "Chicken Wings Spicy / ചിക്കൻ വിംഗ്സ് മസാല", "Duck Wings / പട്ട വിംഗ്സ്", "Lamb Chops / ലാംബ് ചോപ്പ്", "Goat Curry Cut / ആട് കറി കട്ട്", "Pork Ribs / പോർക്ക റിബ്",
+    "Beef Ribs / ബീഫ് റിബ്", "Turkey Nuggets / ടർക്കി നഗ്‌റ്റ്സ്", "Chicken Sausage / ചിക്കൻ സോസേജ്", "Mutton Sausage / മട്ടൺ സോസേജ്", "Pork Sausage / പോർക്ക സോസേജ്"
+  ]},
+  {name:"Fish / മീൻ", unit:"kg", items:[
+    "Rohu / റോഹു", "Catla / കാറ്റ്‌ല", "Tilapia / ടിലാപിയ", "Seer Fish / സീർ ഫിഷ്", "Pomfret / പോംഫ്രെറ്റ്",
+    "Sardine / സാർഡൈൻ", "Mackerel / മാക്കറൽ", "Anchovy / ആഞ്ചോവി", "King Fish / കിംഗ് ഫിഷ്", "Tuna / ട്യൂന",
+    "Salmon / സാല്മൺ", "Trout / ട്രൗട്ട്", "Herring / ഹെറിംഗ്", "Snapper / സ്നാപ്പർ", "Bass / ബാസ്",
+    "Grouper / ഗ്രൂപ്പർ", "Hilsa / ഹിൽസ", "Prawn / ചിംഗൾ", "Crab / കുറ്റി", "Lobster / ലോബ്സ്റ്റർ",
+    "Clams / ക്ലാംസ്", "Oyster / ഓയ്സ്റ്റർ", "Mussels / മുസ്സൽസ്", "Squid / സ്ക്ക്വിഡ്", "Octopus / ഓക്ടോപസ്",
+    "Cuttlefish / കട്ട്ല്ഫിഷ്", "Anchovy Small / ചെറു ആഞ്ചോവി", "Rohu Small / ചെറു റോഹു", "Tilapia Small / ചെറു ടിലാപിയ", "Seer Small / ചെറു സീർ",
+    "Pomfret Small / ചെറു പോംഫ്രെറ്റ്", "Sardine Small / ചെറു സാർഡൈൻ", "Mackerel Small / ചെറു മാക്കറൽ", "King Small / ചെറു കിംഗ് ഫിഷ്", "Tuna Small / ചെറു ട്യൂന",
+    "Salmon Small / ചെറു സാല്മൺ", "Trout Small / ചെറു ട്രൗട്ട്", "Herring Small / ചെറു ഹെറിംഗ്", "Snapper Small / ചെറു സ്നാപ്പർ", "Bass Small / ചെറു ബാസ്",
+    "Grouper Small / ചെറു ഗ്രൂപ്പർ", "Hilsa Small / ചെറു ഹിൽസ", "Prawn Small / ചെറു ചിംഗൾ", "Crab Small / ചെറു കുറ്റി", "Lobster Small / ചെറു ലോബ്സ്റ്റർ",
+    "Clams Small / ചെറു ക്ലാംസ്", "Oyster Small / ചെറു ഓയ്സ്റ്റർ", "Mussels Small / ചെറു മുസ്സൽസ്", "Squid Small / ചെറു സ്ക്ക്വിഡ്", "Octopus Small / ചെറു ഓക്ടോപസ്"
+  ]}
+];
+
+// Render categories dynamically
+function renderCategories(){
+  const container = document.getElementById("categories");
+  container.innerHTML="";
+  categories.forEach((cat,catIdx)=>{
+    let h2 = document.createElement("h2");
+    h2.textContent = cat.name;
+    container.appendChild(h2);
+    cat.items.forEach((item,itemIdx)=>{
+      let div = document.createElement("div");
+      div.className="item";
+      let [en,ml] = item.split(" / ");
+      div.innerHTML=`
+        <span class="ml">${ml}</span>
+        <span class="en">${en}</span>
+        <select id="qty-${catIdx}-${itemIdx}">`+
+        Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1} ${cat.unit}</option>`).join('')+
+        `</select>
+        <button onclick="addItem(${catIdx},${itemIdx})">Add</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+renderCategories();
+
+// Add item to cart
+function addItem(catIdx,itemIdx){
+  let
