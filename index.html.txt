@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Project 1 – Grocery Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body { font-family: Arial, sans-serif; padding: 15px; background:#f9f9f9; }
+h1,h2 { background:#2e7d32; color:white; padding:8px; border-radius:5px; }
+.item { background:white; padding:8px; margin:5px 0; border-radius:5px; }
+button { padding:6px 10px; margin-top:5px; cursor:pointer; }
+select,input,textarea { width:100%; padding:6px; margin-top:4px; }
+table { width:100%; border-collapse:collapse; margin-top:10px; background:white; }
+th,td { border:1px solid #ccc; padding:6px; text-align:center; }
+.lang-btn { background:#1565c0; color:white; border:none; margin-bottom:10px; }
+.remove { background:red; color:white; border:none; }
+</style>
+</head>
+
+<body>
+
+<button class="lang-btn" onclick="toggleLang()">🌐 മലയാളം / English</button>
+
+<h1 id="title">🛒 Grocery Order</h1>
+
+<!-- VEGETABLES -->
+<h2 id="vegTitle">🥦 Vegetables (Max 5kg)</h2>
+<div class="item">
+<span class="ml">തക്കാളി</span><span class="en">Tomato</span>
+<select id="tomato">
+<option value="1">1 kg</option><option value="2">2 kg</option>
+<option value="3">3 kg</option><option value="4">4 kg</option>
+<option value="5">5 kg</option>
+</select>
+<button onclick="addItem('Tomato','തക്കാളി','kg',tomato.value)">Add</button>
+</div>
+
+<div class="item">
+<span class="ml">ഉള്ളി</span><span class="en">Onion</span>
+<select id="onion">
+<option value="1">1 kg</option><option value="2">2 kg</option>
+<option value="3">3 kg</option><option value="4">4 kg</option>
+<option value="5">5 kg</option>
+</select>
+<button onclick="addItem('Onion','ഉള്ളി','kg',onion.value)">Add</button>
+</div>
+
+<!-- FRUITS -->
+<h2 id="fruitTitle">🍎 Fruits (Max 5kg)</h2>
+<div class="item">
+<span class="ml">ആപ്പിൾ</span><span class="en">Apple</span>
+<select id="apple">
+<option value="1">1 kg</option><option value="2">2 kg</option>
+<option value="3">3 kg</option><option value="4">4 kg</option>
+<option value="5">5 kg</option>
+</select>
+<button onclick="addItem('Apple','ആപ്പിൾ','kg',apple.value)">Add</button>
+</div>
+
+<!-- BAKERY -->
+<h2 id="bakeryTitle">🥐 Bakery (Max 10 pcs)</h2>
+<div class="item">
+<span class="ml">ബ്രെഡ്</span><span class="en">Bread</span>
+<select id="bread">
+<option value="1">1</option><option value="2">2</option>
+<option value="5">5</option><option value="10">10</option>
+</select>
+<button onclick="addItem('Bread','ബ്രെഡ്','pcs',bread.value)">Add</button>
+</div>
+
+<!-- OTHER ITEM -->
+<h2 id="otherTitle">➕ Other Items / മറ്റ് സാധനങ്ങൾ</h2>
+<input id="otherName" placeholder="Item Name / സാധനം">
+<input id="otherUnit" placeholder="Unit (kg / pcs)">
+<input id="otherQty" type="number" placeholder="Quantity">
+<button onclick="addOther()">Add Other Item</button>
+
+<!-- CART -->
+<h2 id="cartTitle">🛒 Cart</h2>
+<table id="cartTable">
+<tr>
+<th>Item</th><th>Unit</th><th>Qty</th><th>Remove</th>
+</tr>
+</table>
+
+<!-- CUSTOMER -->
+<h2 id="custTitle">👤 Customer Details</h2>
+<input id="cname" placeholder="Name / പേര്">
+<input id="cphone" placeholder="Phone / ഫോൺ">
+<textarea id="caddress" placeholder="Address / വിലാസം"></textarea>
+
+<!-- SHOP -->
+<h2 id="shopTitle">🏪 Shop Name</h2>
+<input id="shopname" placeholder="Shop name to purchase">
+
+<br>
+<button onclick="placeOrder()">📲 Place Order on WhatsApp</button>
+
+<script>
+let lang="en";
+let cart=[];
+
+function toggleLang(){
+ lang = (lang==="en")?"ml":"en";
+ document.querySelectorAll(".ml").forEach(e=>e.style.display=(lang==="ml")?"inline":"none");
+ document.querySelectorAll(".en").forEach(e=>e.style.display=(lang==="en")?"inline":"none");
+}
+
+toggleLang();
+
+function addItem(en,ml,unit,qty){
+ qty=parseInt(qty);
+ let name = (lang==="ml")?ml:en;
+ let item=cart.find(i=>i.name===name);
+ if(item) item.qty+=qty;
+ else cart.push({name,unit,qty});
+ renderCart();
+}
+
+function addOther(){
+ let name=otherName.value;
+ let unit=otherUnit.value;
+ let qty=parseInt(otherQty.value);
+ if(!name||!unit||!qty){ alert("Fill all fields"); return; }
+ cart.push({name,unit,qty});
+ otherName.value=otherUnit.value=otherQty.value="";
+ renderCart();
+}
+
+function renderCart(){
+ let t=document.getElementById("cartTable");
+ t.innerHTML="<tr><th>Item</th><th>Unit</th><th>Qty</th><th>Remove</th></tr>";
+ cart.forEach((i,idx)=>{
+  t.innerHTML+=`<tr>
+  <td>${i.name}</td><td>${i.unit}</td><td>${i.qty}</td>
+  <td><button class="remove" onclick="removeItem(${idx})">X</button></td>
+  </tr>`;
+ });
+}
+
+function removeItem(i){ cart.splice(i,1); renderCart(); }
+
+function placeOrder(){
+ let msg="*🛒 GROCERY ORDER*%0A%0A";
+ msg+="Name: "+cname.value+"%0A";
+ msg+="Phone: "+cphone.value+"%0A";
+ msg+="Address: "+caddress.value+"%0A";
+ msg+="Shop: "+shopname.value+"%0A%0A";
+ msg+="-------------------------%0A";
+ msg+="Item | Unit | Qty%0A";
+ msg+="-------------------------%0A";
+ cart.forEach(i=>{ msg+=`${i.name} | ${i.unit} | ${i.qty}%0A`; });
+ msg+="-------------------------%0A";
+ msg+="Payment: Cash on Delivery";
+ window.open("https://wa.me/91XXXXXXXXXX?text="+msg);
+}
+</script>
+
+</body>
+</html>
